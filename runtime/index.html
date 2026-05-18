@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>小恐龙增强状态机</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="stage-panel" aria-label="小恐龙状态预览">
+        <div class="stage-toolbar">
+          <div>
+            <p class="eyebrow">Xiao Konglong Runtime</p>
+            <h1>小恐龙增强状态机</h1>
+          </div>
+          <label class="switch">
+            <input id="demo-mode" type="checkbox" checked />
+            <span>演示计时</span>
+          </label>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="pet-wrap" id="pet-wrap" title="悬停观察，拖动触发行走，点击娱乐">
+            <div class="pet-sprite" id="pet-sprite" aria-label="小恐龙动画"></div>
+          </div>
+        </div>
+
+        <div class="status-grid">
+          <div>
+            <span>当前状态</span>
+            <strong id="current-state">idle</strong>
+          </div>
+          <div>
+            <span>触发原因</span>
+            <strong id="current-reason">启动待机</strong>
+          </div>
+          <div>
+            <span>空闲时间</span>
+            <strong id="idle-age">0s</strong>
+          </div>
+          <div>
+            <span>上下文</span>
+            <strong id="context-state">待机</strong>
+          </div>
+        </div>
+      </section>
+
+      <aside class="control-panel" aria-label="状态触发控制台">
+        <section class="control-section">
+          <h2>场景触发</h2>
+          <div class="button-grid scenario-grid">
+            <button type="button" data-action="start-task">开始任务</button>
+            <button type="button" data-action="finish-task">任务成功</button>
+            <button type="button" data-action="fail-task">任务失败</button>
+            <button type="button" data-action="wait-user">等待用户</button>
+            <button type="button" data-action="stop-waiting">结束等待</button>
+            <button type="button" data-action="force-sleepy">模拟犯困</button>
+            <button type="button" data-action="force-sleep">模拟休眠</button>
+            <button type="button" data-action="reset">回到待机</button>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <h2>核心状态</h2>
+          <div class="button-grid" id="core-buttons"></div>
+        </section>
+
+        <section class="control-section">
+          <h2>扩展状态</h2>
+          <div class="button-grid" id="extended-buttons"></div>
+        </section>
+
+        <section class="control-section">
+          <h2>触发日志</h2>
+          <ol class="event-log" id="event-log" aria-live="polite"></ol>
+        </section>
+      </aside>
+    </main>
+
+    <script src="./pet-state-machine.js"></script>
+  </body>
+</html>

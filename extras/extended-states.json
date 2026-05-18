@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "petId": "xiao-konglong",
   "displayName": "小恐龙",
-  "compatibilityNote": "Codex currently triggers the fixed 8x9 core atlas states only. These extended states are bonus assets and trigger semantics for future app integrations or custom wrappers.",
+  "compatibilityNote": "Codex currently triggers the fixed 8x9 core atlas states only. This repo includes runtime/index.html as a custom wrapper that triggers every core and extended state locally.",
   "coreStates": [
     "idle",
     "running-right",
