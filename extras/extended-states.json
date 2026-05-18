@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "petId": "xiao-konglong",
+  "displayName": "小恐龙",
+  "compatibilityNote": "Codex currently triggers the fixed 8x9 core atlas states only. These extended states are bonus assets and trigger semantics for future app integrations or custom wrappers.",
+  "coreStates": [
+    "idle",
+    "running-right",
+    "running-left",
+    "waving",
+    "jumping",
+    "failed",
+    "waiting",
+    "running",
+    "review"
+  ],
+  "extendedStates": [
+    {
+      "id": "long-idle-sleep",
+      "displayName": "长时间休眠",
+      "purpose": "用户长时间没有操作时进入趴睡/休眠表现。",
+      "suggestedTrigger": "No user interaction for 10 minutes or more.",
+      "fallbackCoreState": "idle",
+      "stripPath": "extras/strips/long-idle-sleep.png",
+      "previewPath": "extras/previews/long-idle-sleep.gif",
+      "frameCount": 6
+    },
+    {
+      "id": "sleepy",
+      "displayName": "犯困",
+      "purpose": "短时间空闲后开始犯困，但还没有完全睡着。",
+      "suggestedTrigger": "No user interaction for 3-10 minutes.",
+      "fallbackCoreState": "idle",
+      "stripPath": "extras/strips/sleepy.png",
+      "previewPath": "extras/previews/sleepy.gif",
+      "frameCount": 5
+    },
+    {
+      "id": "wake-up",
+      "displayName": "被叫醒",
+      "purpose": "从休眠状态被用户唤醒时的起身动画。",
+      "suggestedTrigger": "User input while long-idle-sleep is active.",
+      "fallbackCoreState": "jumping",
+      "stripPath": "extras/strips/wake-up.png",
+      "previewPath": "extras/previews/wake-up.gif",
+      "frameCount": 6
+    },
+    {
+      "id": "play-bounce",
+      "displayName": "娱乐弹跳",
+      "purpose": "轻松娱乐状态，结合跳跃和挥手。",
+      "suggestedTrigger": "User opens pet menu or triggers a fun interaction.",
+      "fallbackCoreState": "jumping",
+      "stripPath": "extras/strips/play-bounce.png",
+      "previewPath": "extras/previews/play-bounce.gif",
+      "frameCount": 8
+    },
+    {
+      "id": "dance",
+      "displayName": "左右摇摆",
+      "purpose": "开心时左右摇摆的娱乐表现。",
+      "suggestedTrigger": "Positive user feedback or playful interaction.",
+      "fallbackCoreState": "waving",
+      "stripPath": "extras/strips/dance.png",
+      "previewPath": "extras/previews/dance.gif",
+      "frameCount": 4
+    },
+    {
+      "id": "celebrate",
+      "displayName": "庆祝",
+      "purpose": "任务完成或成功时的开心庆祝动作。",
+      "suggestedTrigger": "Task completed successfully.",
+      "fallbackCoreState": "jumping",
+      "stripPath": "extras/strips/celebrate.png",
+      "previewPath": "extras/previews/celebrate.gif",
+      "frameCount": 7
+    },
+    {
+      "id": "bored",
+      "displayName": "无聊等待",
+      "purpose": "等待太久时的无聊站姿，和普通 waiting 区分。",
+      "suggestedTrigger": "Waiting for user input for more than 2 minutes.",
+      "fallbackCoreState": "waiting",
+      "stripPath": "extras/strips/bored.png",
+      "previewPath": "extras/previews/bored.gif",
+      "frameCount": 6
+    },
+    {
+      "id": "curious",
+      "displayName": "好奇观察",
+      "purpose": "用户悬停或打开相关面板时的观察状态。",
+      "suggestedTrigger": "Pointer hover, inspection, or side panel activity.",
+      "fallbackCoreState": "review",
+      "stripPath": "extras/strips/curious.png",
+      "previewPath": "extras/previews/curious.gif",
+      "frameCount": 6
+    },
+    {
+      "id": "deep-focus",
+      "displayName": "专注工作",
+      "purpose": "长任务执行时的专注工作状态。",
+      "suggestedTrigger": "Long-running local or cloud task is active.",
+      "fallbackCoreState": "running",
+      "stripPath": "extras/strips/deep-focus.png",
+      "previewPath": "extras/previews/deep-focus.gif",
+      "frameCount": 6
+    },
+    {
+      "id": "peek",
+      "displayName": "探头看看",
+      "purpose": "从屏幕边缘或小窗口探头看的趣味状态。",
+      "suggestedTrigger": "Pet is tucked near an edge or summoned briefly.",
+      "fallbackCoreState": "idle",
+      "stripPath": "extras/strips/peek.png",
+      "previewPath": "extras/previews/peek.gif",
+      "frameCount": 6
+    }
+  ]
+}
