@@ -1,104 +1,43 @@
-# 小恐龙状态触发说明
+# 小恐龙 Codex 状态触发说明
 
-这个仓库现在包含两套东西：
+小恐龙现在按 hatch-pet / Codex 宠物包方式运行，不再依赖单独网页。
 
-- `pet.json` 和 `spritesheet.png`：给 Codex 官方宠物系统使用的兼容包。
-- `runtime/`：本仓库自己的增强状态机，用来触发全部核心状态和扩展状态。
-
-如果只在 Codex 设置里选择这个宠物，Codex 仍然只会按自己的内部逻辑播放核心状态。要让全部状态都能在本机触发，请启动本地运行层：
-
-```bash
-npm start
-```
-
-也可以后台启动：
-
-```bash
-npm run start:local
-```
-
-停止后台服务：
-
-```bash
-npm run stop:local
-```
-
-默认地址是：
+Codex 实际读取的是：
 
 ```text
-http://127.0.0.1:49321/runtime/
+~/.codex/pets/xiao-xiongdi-long/pet.json
+~/.codex/pets/xiao-xiongdi-long/spritesheet.webp
 ```
 
-## 鼠标触发
+## 真实触发范围
 
-增强状态机会根据鼠标动作自动切换状态。右侧按钮只用于调试，不是主要触发方式。
+hatch-pet 生成的是 Codex 兼容宠物图集。Codex 当前只会调度固定 9 个状态行：
 
-| 状态 | 触发条件 |
-| --- | --- |
-| `idle` | 鼠标离开小恐龙，并且没有其他临时动画或计时上下文 |
-| `curious` | 鼠标移入并短暂停留在小恐龙身上 |
-| `review` | 鼠标持续悬停一段时间，或在小恐龙上滚轮向上 |
-| `deep-focus` | 鼠标长时间悬停，或在小恐龙上滚轮向下 |
-| `running-right` | 按住小恐龙向右拖动 |
-| `running-left` | 按住小恐龙向左拖动 |
-| `jumping` | 按住小恐龙向上拖动，或中键点击 |
-| `running` | 按住小恐龙向下拖动 |
-| `failed` | 按住小恐龙快速左右摇动 |
-| `waving` | 右键点击小恐龙 |
-| `waiting` | 左键按住小恐龙不动 |
-| `bored` | 左键继续长按小恐龙 |
-| `play-bounce` | 第 1 次单击小恐龙 |
-| `dance` | 第 2 次单击小恐龙 |
-| `peek` | 第 3 次单击小恐龙 |
-| `celebrate` | 双击小恐龙 |
-| `sleepy` | 鼠标无操作超过 3 分钟；演示计时下为 8 秒 |
-| `long-idle-sleep` | 鼠标无操作超过 10 分钟；演示计时下为 18 秒 |
-| `wake-up` | `sleepy` 或 `long-idle-sleep` 时再次移动、按下或点击鼠标 |
+| Codex 状态 | Codex 触发含义 | 小恐龙当前视觉内容 |
+| --- | --- | --- |
+| `idle` | 待机、没有任务时 | 待机、犯困、趴睡 |
+| `running-right` | 宠物向右移动 | 向右移动 |
+| `running-left` | 宠物向左移动 | 向左移动 |
+| `waving` | 打招呼或注意力动作 | 挥手、摇摆、娱乐弹跳 |
+| `jumping` | 跳跃或强调动作 | 跳跃、被叫醒、庆祝 |
+| `failed` | 失败、错误、任务未完成 | 失败、委屈、趴下 |
+| `waiting` | 等用户输入、确认或继续 | 等待、无聊等待 |
+| `running` | Codex 正在执行任务 | 工作中、专注工作 |
+| `review` | Codex 正在审阅、分析、检查 | 审阅、好奇观察、探头看看 |
 
-## 手动触发
+## 重要限制
 
-页面右侧仍保留两组调试按钮：
+`sleepy`、`long-idle-sleep`、`wake-up`、`play-bounce`、`dance`、`celebrate`、`bored`、`curious`、`deep-focus`、`peek` 这些不是 Codex 当前会单独调度的状态名。
 
-- 核心状态：逐个播放 `idle`、`running-right`、`running-left`、`waving`、`jumping`、`failed`、`waiting`、`running`、`review`。
-- 扩展状态：逐个播放 `sleepy`、`long-idle-sleep`、`wake-up`、`play-bounce`、`dance`、`celebrate`、`bored`、`curious`、`deep-focus`、`peek`。
+为了让它们作为 Codex 宠物的一部分在本地出现，主 `spritesheet.webp` 已经把这些动作折叠进最接近的 9 个 Codex 状态行。这样 Codex 正常触发 `idle`、`waiting`、`running`、`review` 等状态时，会播放包含扩展动作的版本。
 
-手动按钮会锁定当前动画几秒，方便确认资源是否能正常播放。
+## 已安装位置
 
-## 场景按钮
+本地已安装到：
 
-场景按钮用于测试非鼠标场景，不是主要触发方式。
+```text
+~/.codex/pets/xiao-xiongdi-long/
+~/.codex/avatars/xiao-xiongdi-long/
+```
 
-| 按钮 | 作用 |
-| --- | --- |
-| 开始任务 | 进入 `running`，持续一段时间后自动进入 `deep-focus` |
-| 任务成功 | 进入 `celebrate` |
-| 任务失败 | 进入 `failed` |
-| 等待用户 | 进入 `waiting`，持续一段时间后自动进入 `bored` |
-| 结束等待 | 清除等待上下文并回到 `idle` |
-| 模拟犯困 | 直接把空闲时间推进到 `sleepy` 阈值 |
-| 模拟休眠 | 直接把空闲时间推进到 `long-idle-sleep` 阈值 |
-| 回到待机 | 清除任务和等待上下文并回到 `idle` |
-
-## 计时模式
-
-默认开启“演示计时”，方便快速看到状态切换：
-
-- 犯困：8 秒
-- 休眠：18 秒
-- 无聊等待：10 秒
-- 专注工作：12 秒
-- 悬停审阅：1.2 秒
-- 悬停专注：3.6 秒
-- 长按等待：0.55 秒
-- 长按无聊：1.8 秒
-
-关闭“演示计时”后使用更接近真实场景的时间：
-
-- 犯困：3 分钟
-- 休眠：10 分钟
-- 无聊等待：2 分钟
-- 专注工作：90 秒
-- 悬停审阅：1.8 秒
-- 悬停专注：6 秒
-- 长按等待：0.7 秒
-- 长按无聊：2.4 秒
+如果 Codex 当前窗口没有立刻刷新，请在宠物设置里重新选择“小恐龙”，或者正常退出并重新打开 Codex。

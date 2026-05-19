@@ -5,13 +5,11 @@
 ## 文件
 
 - `pet.json`: Codex 宠物清单
-- `spritesheet.png`: 8x9 宠物动画图集，尺寸 `1536x1872`
-- `runtime/`: 可本地运行的增强状态机，会触发核心状态和扩展状态
-- `docs/state-triggers.md`: 全部状态的触发规则
-- `scripts/run-local.mjs`: 本地状态机服务
+- `spritesheet.webp`: Codex 实际读取的 8x9 宠物动画图集，尺寸 `1536x1872`
+- `spritesheet.png`: 同内容 PNG 版，用于 QA 和预览
+- `docs/state-triggers.md`: Codex 实际状态触发说明
 - `qa/contact-sheet.png`: 所有动画帧预览
-- `qa/runtime-screenshot.png`: 增强状态机页面截图
-- `qa/mouse-runtime-screenshot.png`: 鼠标触发验证截图
+- `qa/codex-state-map.json`: 扩展动作折叠到 Codex 状态行的映射
 - `qa/previews/*.gif`: 各状态的动图预览
 - `qa/validation.json`: 图集校验结果
 
@@ -28,21 +26,21 @@ git clone git@github.com:DrXin-code/xiao-konglong-codex-pet.git ~/.codex/pets/xi
 
 ## 动画状态
 
-Codex 当前稳定识别的是下面 9 个核心状态；它们都在主 `spritesheet.png` 中：
+Codex 当前稳定识别的是下面 9 个核心状态；它们都在主 `spritesheet.webp` 中：
 
-- `idle`: 待机
+- `idle`: 待机、犯困、趴睡
 - `running-right`: 向右移动
 - `running-left`: 向左移动
-- `waving`: 挥手
-- `jumping`: 跳跃
+- `waving`: 挥手、摇摆、娱乐弹跳
+- `jumping`: 跳跃、被叫醒、庆祝
 - `failed`: 失败状态
-- `waiting`: 等待确认
-- `running`: 工作中
-- `review`: 审阅中
+- `waiting`: 等待确认、无聊等待
+- `running`: 工作中、专注工作
+- `review`: 审阅中、好奇观察、探头看看
 
 ## 扩展状态
 
-`extras/extended-states.json` 增加了一组扩展状态设计，适合以后接入自定义触发逻辑或等待 Codex 支持更多状态。当前 Codex 不会自动触发这些额外状态，但资产已经放在仓库中：
+`extras/extended-states.json` 保留了一组扩展状态源素材。Codex 当前不会按这些名字单独触发状态，所以主图集已经把它们折叠进最接近的 9 个 Codex 状态行：
 
 - `long-idle-sleep`: 长时间不用时休眠
 - `sleepy`: 空闲一段时间后犯困
@@ -58,34 +56,19 @@ Codex 当前稳定识别的是下面 9 个核心状态；它们都在主 `sprite
 扩展状态文件：
 
 - `extras/extended-states.json`: 状态语义、建议触发条件、核心状态 fallback
-- `extras/strips/*.png`: 透明 PNG 动画条，适合后续接入
+- `extras/strips/*.png`: 透明 PNG 动画条，作为主图集折叠素材
 - `extras/previews/*.gif`: GitHub 预览用白底 GIF
 - `extras/extended-contact-sheet.png`: 扩展状态总览
 
-## 增强状态机
+## 本地安装
 
-如果要让全部状态都能在本地通过鼠标触发，启动本地运行层：
-
-```bash
-npm start
-```
-
-后台启动：
-
-```bash
-npm run start:local
-```
-
-停止后台服务：
-
-```bash
-npm run stop:local
-```
-
-默认地址：
+当前机器已安装到：
 
 ```text
-http://127.0.0.1:49321/runtime/
+~/.codex/pets/xiao-xiongdi-long/
+~/.codex/avatars/xiao-xiongdi-long/
 ```
 
-增强状态机会监听悬停、单击、双击、右键、滚轮、长按、上下左右拖动、快速左右摇动，以及鼠标静置，并播放所有核心状态和扩展状态。详细规则见 `docs/state-triggers.md`。
+如果手动安装，可以复制或克隆仓库到 Codex 宠物目录，并确保 `pet.json` 指向 `spritesheet.webp`。
+
+详细触发说明见 `docs/state-triggers.md`。
