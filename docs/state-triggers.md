@@ -5,41 +5,59 @@
 - `pet.json` 和 `spritesheet.png`：给 Codex 官方宠物系统使用的兼容包。
 - `runtime/`：本仓库自己的增强状态机，用来触发全部核心状态和扩展状态。
 
-如果只在 Codex 设置里选择这个宠物，Codex 仍然只会按自己的内部逻辑播放核心状态。要让全部状态都能触发，请打开：
+如果只在 Codex 设置里选择这个宠物，Codex 仍然只会按自己的内部逻辑播放核心状态。要让全部状态都能在本机触发，请启动本地运行层：
 
-```text
-runtime/index.html
+```bash
+npm start
 ```
 
-## 自动触发
+也可以后台启动：
 
-增强状态机会根据本地页面事件自动切换状态。
+```bash
+npm run start:local
+```
+
+停止后台服务：
+
+```bash
+npm run stop:local
+```
+
+默认地址是：
+
+```text
+http://127.0.0.1:49321/runtime/
+```
+
+## 鼠标触发
+
+增强状态机会根据鼠标动作自动切换状态。右侧按钮只用于调试，不是主要触发方式。
 
 | 状态 | 触发条件 |
 | --- | --- |
-| `idle` | 没有任务、没有等待、没有悬停、没有拖动时 |
-| `sleepy` | 空闲超过 3 分钟；演示计时下为 8 秒 |
-| `long-idle-sleep` | 空闲超过 10 分钟；演示计时下为 18 秒 |
-| `wake-up` | `sleepy` 或 `long-idle-sleep` 时发生键盘、鼠标、点击等用户操作 |
-| `curious` | 鼠标悬停在小恐龙身上 |
+| `idle` | 鼠标离开小恐龙，并且没有其他临时动画或计时上下文 |
+| `curious` | 鼠标移入并短暂停留在小恐龙身上 |
+| `review` | 鼠标持续悬停一段时间，或在小恐龙上滚轮向上 |
+| `deep-focus` | 鼠标长时间悬停，或在小恐龙上滚轮向下 |
 | `running-right` | 按住小恐龙向右拖动 |
 | `running-left` | 按住小恐龙向左拖动 |
-| `play-bounce` | 单击小恐龙，娱乐状态会在 `play-bounce`、`dance`、`peek` 之间轮换 |
-| `dance` | 单击小恐龙轮换到该娱乐状态 |
-| `peek` | 单击小恐龙轮换到该娱乐状态 |
-| `celebrate` | 双击小恐龙，或点击“任务成功” |
-| `running` | 点击“开始任务”后的初始工作状态 |
-| `deep-focus` | 任务运行超过 90 秒；演示计时下为 12 秒 |
-| `waiting` | 点击“等待用户”后的初始等待状态 |
-| `bored` | 等待用户超过 2 分钟；演示计时下为 10 秒 |
-| `failed` | 点击“任务失败” |
-| `waving` | 点击手动状态按钮 |
-| `jumping` | 点击手动状态按钮 |
-| `review` | 点击手动状态按钮 |
+| `jumping` | 按住小恐龙向上拖动，或中键点击 |
+| `running` | 按住小恐龙向下拖动 |
+| `failed` | 按住小恐龙快速左右摇动 |
+| `waving` | 右键点击小恐龙 |
+| `waiting` | 左键按住小恐龙不动 |
+| `bored` | 左键继续长按小恐龙 |
+| `play-bounce` | 第 1 次单击小恐龙 |
+| `dance` | 第 2 次单击小恐龙 |
+| `peek` | 第 3 次单击小恐龙 |
+| `celebrate` | 双击小恐龙 |
+| `sleepy` | 鼠标无操作超过 3 分钟；演示计时下为 8 秒 |
+| `long-idle-sleep` | 鼠标无操作超过 10 分钟；演示计时下为 18 秒 |
+| `wake-up` | `sleepy` 或 `long-idle-sleep` 时再次移动、按下或点击鼠标 |
 
 ## 手动触发
 
-页面右侧有两组按钮：
+页面右侧仍保留两组调试按钮：
 
 - 核心状态：逐个播放 `idle`、`running-right`、`running-left`、`waving`、`jumping`、`failed`、`waiting`、`running`、`review`。
 - 扩展状态：逐个播放 `sleepy`、`long-idle-sleep`、`wake-up`、`play-bounce`、`dance`、`celebrate`、`bored`、`curious`、`deep-focus`、`peek`。
@@ -47,6 +65,8 @@ runtime/index.html
 手动按钮会锁定当前动画几秒，方便确认资源是否能正常播放。
 
 ## 场景按钮
+
+场景按钮用于测试非鼠标场景，不是主要触发方式。
 
 | 按钮 | 作用 |
 | --- | --- |
@@ -67,6 +87,10 @@ runtime/index.html
 - 休眠：18 秒
 - 无聊等待：10 秒
 - 专注工作：12 秒
+- 悬停审阅：1.2 秒
+- 悬停专注：3.6 秒
+- 长按等待：0.55 秒
+- 长按无聊：1.8 秒
 
 关闭“演示计时”后使用更接近真实场景的时间：
 
@@ -74,3 +98,7 @@ runtime/index.html
 - 休眠：10 分钟
 - 无聊等待：2 分钟
 - 专注工作：90 秒
+- 悬停审阅：1.8 秒
+- 悬停专注：6 秒
+- 长按等待：0.7 秒
+- 长按无聊：2.4 秒

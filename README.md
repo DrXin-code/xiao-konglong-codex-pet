@@ -8,8 +8,10 @@
 - `spritesheet.png`: 8x9 宠物动画图集，尺寸 `1536x1872`
 - `runtime/`: 可本地运行的增强状态机，会触发核心状态和扩展状态
 - `docs/state-triggers.md`: 全部状态的触发规则
+- `scripts/run-local.mjs`: 本地状态机服务
 - `qa/contact-sheet.png`: 所有动画帧预览
 - `qa/runtime-screenshot.png`: 增强状态机页面截图
+- `qa/mouse-runtime-screenshot.png`: 鼠标触发验证截图
 - `qa/previews/*.gif`: 各状态的动图预览
 - `qa/validation.json`: 图集校验结果
 
@@ -62,10 +64,28 @@ Codex 当前稳定识别的是下面 9 个核心状态；它们都在主 `sprite
 
 ## 增强状态机
 
-如果要让全部状态都能在本地触发，打开：
+如果要让全部状态都能在本地通过鼠标触发，启动本地运行层：
 
 ```bash
-open runtime/index.html
+npm start
 ```
 
-增强状态机会监听悬停、点击、拖动、空闲、等待、任务运行、任务成功和任务失败等事件，并播放所有核心状态和扩展状态。详细规则见 `docs/state-triggers.md`。
+后台启动：
+
+```bash
+npm run start:local
+```
+
+停止后台服务：
+
+```bash
+npm run stop:local
+```
+
+默认地址：
+
+```text
+http://127.0.0.1:49321/runtime/
+```
+
+增强状态机会监听悬停、单击、双击、右键、滚轮、长按、上下左右拖动、快速左右摇动，以及鼠标静置，并播放所有核心状态和扩展状态。详细规则见 `docs/state-triggers.md`。

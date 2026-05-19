@@ -86,12 +86,20 @@
       sleepMs: 10 * 60 * 1000,
       boredMs: 2 * 60 * 1000,
       focusMs: 90 * 1000,
+      hoverReviewMs: 1800,
+      hoverFocusMs: 6000,
+      pressWaitingMs: 700,
+      pressBoredMs: 2400,
     },
     demo: {
       sleepyMs: 8 * 1000,
       sleepMs: 18 * 1000,
       boredMs: 10 * 1000,
       focusMs: 12 * 1000,
+      hoverReviewMs: 1200,
+      hoverFocusMs: 3600,
+      pressWaitingMs: 550,
+      pressBoredMs: 1800,
     },
   };
 
@@ -116,8 +124,22 @@
     waitingSince: null,
     taskSince: null,
     hover: false,
+    hoverStartedAt: 0,
     dragging: false,
+    pointerDownAt: 0,
+    pressTimer: null,
+    boredTimer: null,
+    longPressTriggered: false,
     dragLastX: 0,
+    dragLastY: 0,
+    dragStartX: 0,
+    dragStartY: 0,
+    dragMoved: false,
+    dragTurns: 0,
+    dragTurnWindowStart: 0,
+    lastDragDirection: 0,
+    suppressClickUntil: 0,
+    cancelNextClick: false,
     nextPlayState: 0,
     lastPointerActivityAt: 0,
   };
@@ -175,30 +197,64 @@
   function bindPetEvents() {
     petWrap.addEventListener("pointerenter", () => {
       runtime.hover = true;
-      noteActivity("鼠标悬停");
+      runtime.hoverStartedAt = Date.now();
+      if (noteActivity("鼠标悬停")) {
+        return;
+      }
       setState("curious", "鼠标悬停观察");
     });
 
     petWrap.addEventListener("pointerleave", () => {
       runtime.hover = false;
+      runtime.hoverStartedAt = 0;
+      if (Date.now() >= runtime.lockUntil && !runtime.dragging) {
+        setState("idle", "鼠标离开", { clearLock: true });
+      }
     });
 
     petWrap.addEventListener("click", () => {
-      noteActivity("点击宠物");
+      if (runtime.cancelNextClick || Date.now() < runtime.suppressClickUntil) {
+        runtime.cancelNextClick = false;
+        return;
+      }
+      if (noteActivity("点击宠物")) {
+        return;
+      }
+      clearTaskAndWait();
       const state = playStates[runtime.nextPlayState % playStates.length];
       runtime.nextPlayState += 1;
       setState(state, "点击宠物娱乐", { holdMs: 3600, resetFrame: true });
     });
 
     petWrap.addEventListener("dblclick", () => {
-      noteActivity("双击宠物");
+      if (noteActivity("双击宠物")) {
+        return;
+      }
+      clearTaskAndWait();
       setState("celebrate", "双击庆祝", { holdMs: 4200, resetFrame: true });
     });
 
     petWrap.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      if (noteActivity("按下鼠标")) {
+        return;
+      }
+      runtime.lockUntil = 0;
+      clearPressTimers();
       runtime.dragging = true;
+      runtime.pointerDownAt = Date.now();
       runtime.dragLastX = event.clientX;
-      noteActivity("开始拖动");
+      runtime.dragLastY = event.clientY;
+      runtime.dragStartX = event.clientX;
+      runtime.dragStartY = event.clientY;
+      runtime.dragMoved = false;
+      runtime.dragTurns = 0;
+      runtime.dragTurnWindowStart = 0;
+      runtime.lastDragDirection = 0;
+      runtime.longPressTriggered = false;
+      startPressTimers();
       petWrap.setPointerCapture(event.pointerId);
     });
 
@@ -208,29 +264,178 @@
         return;
       }
 
-      const deltaX = event.clientX - runtime.dragLastX;
-      runtime.dragLastX = event.clientX;
-      noteActivity("拖动宠物");
-
-      if (Math.abs(deltaX) < 2) {
+      if (Date.now() < runtime.lockUntil) {
         return;
       }
 
-      setState(
-        deltaX > 0 ? "running-right" : "running-left",
-        deltaX > 0 ? "向右拖动" : "向左拖动",
-      );
+      const deltaX = event.clientX - runtime.dragLastX;
+      const deltaY = event.clientY - runtime.dragLastY;
+      runtime.dragLastX = event.clientX;
+      runtime.dragLastY = event.clientY;
+      noteActivity("拖动宠物");
+
+      const totalX = event.clientX - runtime.dragStartX;
+      const totalY = event.clientY - runtime.dragStartY;
+      if (Math.hypot(totalX, totalY) > 8) {
+        runtime.dragMoved = true;
+        clearPressTimers();
+      }
+
+      if (detectShake(deltaX)) {
+        clearTaskAndWait();
+        setState("failed", "快速左右摇动", { holdMs: 3200, resetFrame: true });
+        return;
+      }
+
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+      if (Math.max(absX, absY) < 2) {
+        return;
+      }
+
+      clearTaskAndWait();
+      if (absY > absX * 1.4) {
+        setState(
+          deltaY < 0 ? "jumping" : "running",
+          deltaY < 0 ? "向上拖动" : "向下拖动",
+        );
+      } else {
+        setState(
+          deltaX > 0 ? "running-right" : "running-left",
+          deltaX > 0 ? "向右拖动" : "向左拖动",
+        );
+      }
     });
 
     petWrap.addEventListener("pointerup", (event) => {
       runtime.dragging = false;
-      noteActivity("结束拖动");
+      runtime.pointerDownAt = 0;
+      clearPressTimers();
+      if (runtime.dragMoved || runtime.longPressTriggered) {
+        const releasedState = runtime.currentState;
+        if (runtime.longPressTriggered) {
+          runtime.waitingSince = null;
+        }
+        runtime.cancelNextClick = true;
+        setState(releasedState, "鼠标松开", { holdMs: 1200 });
+      }
       petWrap.releasePointerCapture(event.pointerId);
     });
 
+    petWrap.addEventListener("pointercancel", () => {
+      runtime.dragging = false;
+      runtime.pointerDownAt = 0;
+      runtime.waitingSince = null;
+      clearPressTimers();
+    });
+
+    petWrap.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      if (noteActivity("右键宠物")) {
+        return;
+      }
+      clearTaskAndWait();
+      setState("waving", "右键打招呼", { holdMs: 3200, resetFrame: true });
+    });
+
+    petWrap.addEventListener("auxclick", (event) => {
+      if (event.button !== 1) {
+        return;
+      }
+      event.preventDefault();
+      if (noteActivity("中键宠物")) {
+        return;
+      }
+      clearTaskAndWait();
+      setState("jumping", "中键跳跃", { holdMs: 2600, resetFrame: true });
+    });
+
+    petWrap.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        if (noteActivity("滚轮宠物")) {
+          return;
+        }
+        clearTaskAndWait();
+        if (event.deltaY < 0) {
+          setState("review", "滚轮向上审阅", { holdMs: 3000, resetFrame: true });
+        } else {
+          setState("deep-focus", "滚轮向下专注", {
+            holdMs: 3200,
+            resetFrame: true,
+          });
+        }
+      },
+      { passive: false },
+    );
+
+    connectLocalEvents();
     window.addEventListener("keydown", () => noteActivity("键盘输入"));
     window.addEventListener("pointerdown", () => noteActivity("页面点击"));
     window.addEventListener("focus", () => noteActivity("窗口获得焦点"));
+  }
+
+  function startPressTimers() {
+    const timing = getTiming();
+    runtime.pressTimer = window.setTimeout(() => {
+      if (!runtime.dragging || runtime.dragMoved) {
+        return;
+      }
+      runtime.longPressTriggered = true;
+      clearTaskAndWait();
+      runtime.waitingSince = Date.now();
+      setState("waiting", "鼠标长按等待", {
+        clearLock: true,
+        resetFrame: true,
+      });
+    }, timing.pressWaitingMs);
+
+    runtime.boredTimer = window.setTimeout(() => {
+      if (!runtime.dragging || runtime.dragMoved) {
+        return;
+      }
+      runtime.longPressTriggered = true;
+      clearTaskAndWait();
+      runtime.waitingSince = Date.now() - getTiming().boredMs - 1;
+      setState("bored", "鼠标继续长按", {
+        clearLock: true,
+        resetFrame: true,
+      });
+    }, timing.pressBoredMs);
+  }
+
+  function clearPressTimers() {
+    if (runtime.pressTimer) {
+      window.clearTimeout(runtime.pressTimer);
+      runtime.pressTimer = null;
+    }
+    if (runtime.boredTimer) {
+      window.clearTimeout(runtime.boredTimer);
+      runtime.boredTimer = null;
+    }
+  }
+
+  function detectShake(deltaX) {
+    if (Math.abs(deltaX) < 5) {
+      return false;
+    }
+
+    const now = Date.now();
+    const direction = Math.sign(deltaX);
+    if (!runtime.dragTurnWindowStart || now - runtime.dragTurnWindowStart > 900) {
+      runtime.dragTurnWindowStart = now;
+      runtime.dragTurns = 0;
+      runtime.lastDragDirection = direction;
+      return false;
+    }
+
+    if (runtime.lastDragDirection && runtime.lastDragDirection !== direction) {
+      runtime.dragTurns += 1;
+    }
+    runtime.lastDragDirection = direction;
+
+    return runtime.dragTurns >= 4;
   }
 
   function throttlePointerActivity() {
@@ -306,8 +511,11 @@
     runtime.lastActivityAt = Date.now();
 
     if (wasSleeping) {
+      runtime.suppressClickUntil = Date.now() + 700;
       setState("wake-up", `${reason}唤醒`, { holdMs: 2200, resetFrame: true });
     }
+
+    return wasSleeping;
   }
 
   function tick() {
@@ -321,7 +529,14 @@
     const timing = getTiming();
 
     if (runtime.hover) {
-      setState("curious", "鼠标悬停观察");
+      const hoverAge = now - runtime.hoverStartedAt;
+      if (hoverAge >= timing.hoverFocusMs) {
+        setState("deep-focus", "鼠标长时间悬停");
+      } else if (hoverAge >= timing.hoverReviewMs) {
+        setState("review", "鼠标持续悬停");
+      } else {
+        setState("curious", "鼠标悬停观察");
+      }
       return;
     }
 
@@ -382,6 +597,30 @@
     if (changed || options.forceLog) {
       logEvent(states[id].label, reason);
     }
+  }
+
+  function clearTaskAndWait() {
+    runtime.waitingSince = null;
+    runtime.taskSince = null;
+  }
+
+  function connectLocalEvents() {
+    if (!window.EventSource || window.location.protocol !== "http:") {
+      return;
+    }
+
+    const source = new EventSource("/api/events");
+    source.addEventListener("trigger", (event) => {
+      const payload = JSON.parse(event.data);
+      if (!states[payload.state]) {
+        return;
+      }
+      clearTaskAndWait();
+      setState(payload.state, payload.reason || "本地服务触发", {
+        holdMs: 3600,
+        resetFrame: true,
+      });
+    });
   }
 
   function animate(timestamp) {
